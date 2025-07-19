@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Socket.IO Chat Test</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    #chatBox { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
+    .msg { margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <h2>Socket.IO Chat Test</h2>
+
+  <label>Sender:</label>
+  <select id="sender">
+    <option value="UserA">UserA</option>
+    <option value="UserB">UserB</option>
+  </select>
+
+  <label>Receiver:</label>
+  <select id="receiver">
+    <option value="UserB">UserB</option>
+    <option value="UserA">UserA</option>
+  </select>
+
+  <div id="chatBox"></div>
+
+  <input type="text" id="messageInput" placeholder="Type a message..." style="width: 60%;" />
+  <button onclick="sendMessage()">Send</button>
+  <button onclick="disconnectSocket()">Disconnect</button> <!-- ✅ Disconnect Button -->
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const socket = io("http://localhost:3000"); // Replace with your deployed backend if needed
+
+    const chatBox = document.getElementById("chatBox");
+
+    socket.on("connect", () => {
+      console.log("Connected:", socket.id);
+    });
+
+    socket.on("receiveMessage", (data) => {
+      const div = document.createElement("div");
+      div.className = "msg";
+      div.textContent = `${data.sender}: ${data.message}`;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    function sendMessage() {
+      const sender = document.getElementById("sender").value;
+      const receiver = document.getElementById("receiver").value;
+      const message = document.getElementById("messageInput").value;
+
+      if (!message.trim()) return;
+
+      const msgData = { sender, receiver, message };
+      socket.emit("sendMessage", msgData);
+      document.getElementById("messageInput").value = "";
+    }
+
+    function disconnectSocket() {
+      socket.disconnect();
+      alert("Disconnected from server");
+    }
+  </script>
+</body>
+</html>
