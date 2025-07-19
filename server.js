@@ -11,40 +11,39 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*", // Allow all origins or use your frontend URL
+        origin: "*", // Use your frontend URL in production
         methods: ["GET", "POST"]
     }
 });
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection
+// Connect to MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
-}).then(() => console.log("MongoDB connected"))
-    .catch((err) => console.error("Mongo error:", err));
+}).then(() => console.log("✅ MongoDB Connected"))
+    .catch((err) => console.error("MongoDB Error:", err));
 
-// Optional: Your API routes
-const messageRoutes = require("./routes/messageRoutes");
-app.use("/api/messages", messageRoutes);
+// Optional: REST API route for message storage
+app.use("/api/messages", require("./routes/messageRoutes"));
 
-// ✅ Place your Socket.IO logic here
+// Socket.IO Connection
 io.on("connection", (socket) => {
+    console.log("🟢 Client connected:", socket.id);
 
     socket.on("sendMessage", (data) => {
-        io.emit("receiveMessage", data); // Broadcast to all connected clients
+        console.log("📨 Received:", data);
+        io.emit("receiveMessage", data);
     });
 
     socket.on("disconnect", () => {
-        console.log("Client disconnected:", socket.id);
+        console.log("🔴 Client disconnected:", socket.id);
     });
 });
 
-// Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`🚀 Server listening on port ${PORT}`);
 });
