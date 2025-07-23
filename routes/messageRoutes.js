@@ -5,23 +5,23 @@ const Message = require('../models/Message');
 // POST a message
 router.post('/', async (req, res) => {
     try {
-        const message = await Message.create(req.body);
-        res.status(201).json(message);
+        const newMessage = new Message(req.body);
+        const savedMessage = await newMessage.save();
+        res.status(201).json(savedMessage);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
 // GET all messages between two users
-router.get('/', async (req, res) => {
-    const { sender, receiver } = req.query;
+router.get('/:sender/:receiver', async (req, res) => {
     try {
         const messages = await Message.find({
             $or: [
-                { sender, receiver },
-                { sender: receiver, receiver: sender }
+                { sender: req.params.sender, receiver: req.params.receiver },
+                { sender: req.params.receiver, receiver: req.params.sender }
             ]
-        }).sort('timestamp');
+        }).sort({ timestamp: 1 });
         res.json(messages);
     } catch (err) {
         res.status(500).json({ error: err.message });
