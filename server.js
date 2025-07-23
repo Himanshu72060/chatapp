@@ -17,6 +17,7 @@ const io = new Server(server, {
 });
 
 const chat = require("./models/chatModel"); // Assuming you have a chat model defined
+const router = require("./routes/messageRoutes");
 
 io.on("connection", (socket) => {
     console.log("🟢 Client connected:", socket.id);
@@ -42,10 +43,15 @@ io.on("connection", (socket) => {
         // Emit message to all connected clients
         socket.broadcast.emit("receiveMessage", data);
     });
+    socket.on("disconnect", () => {
+        console.log("🔴 Client disconnected:", socket.id);
+    });
+});
 
 
     app.use(cors());
     app.use(express.json());
+    app.use("/api/messages", router);
 
     // Connect to MongoDB Atlas
     mongoose.connect(process.env.MONGO_URI, {
