@@ -1,35 +1,46 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const Message = require('../models/Message');
+const Message = require("../models/Message");
 
-// POST a message
-router.post('/', async (req, res) => {
+// Create message
+router.post("/", async (req, res) => {
     try {
-        const newMessage = new Message(req.body);
-        const savedMessage = await newMessage.save();
-        res.status(201).json(savedMessage);
+        const message = new Message(req.body);
+        await message.save();
+        res.status(201).json(message);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// GET all messages between two users
-router.get('/:sender/:receiver', async (req, res) => {
+// Get all messages
+router.get("/", async (req, res) => {
     try {
-        const messages = await Message.find({
-            $or: [
-                { sender: req.params.sender, receiver: req.params.receiver },
-                { sender: req.params.receiver, receiver: req.params.sender }
-            ]
-        }).sort({ timestamp: 1 });
+        const messages = await Message.find().sort({ timestamp: 1 });
         res.json(messages);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// UPDATE a message
-router.put('/:id', async (req, res) => {
+// Get chat between two users
+router.get("/chat", async (req, res) => {
+    const { user1, user2 } = req.query;
+    try {
+        const chats = await Message.find({
+            $or: [
+                { sender: user1, receiver: user2 },
+                { sender: user2, receiver: user1 }
+            ]
+        }).sort({ timestamp: 1 });
+        res.json(chats);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update message
+router.put("/:id", async (req, res) => {
     try {
         const updated = await Message.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json(updated);
@@ -38,11 +49,11 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// DELETE a message
-router.delete('/:id', async (req, res) => {
+// Delete message
+router.delete("/:id", async (req, res) => {
     try {
         await Message.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Message deleted' });
+        res.json({ message: "Message deleted" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
